@@ -45,27 +45,32 @@ def next(lines, irow):
     tlines = sum(['|' == c for c in new_lines[irow]])
     return new_lines, splits, tlines
 
-def next_rec(lines, irow):
+def next_rec(lines, irow, memory= {}):
     # copy
     new_lines = [l for l in lines]
 
     if irow == len(lines) - 1:
         # print('hoi')
-        return [1]
+        return 1
     elif irow == 0:
         row = new_lines[0].replace('S', '|')
         new_lines[irow] = row
         return next_rec(new_lines, 1)
     else:
         i = find_char_indices(new_lines[irow-1], '|')[0]
-        # print(ibeams)
         row = new_lines[irow]
 
         if row[i] == '.':
-            row = replace_char_at_index(row, i, '|')
-            new_lines[irow] = row
-            return next_rec(new_lines, irow+1)
-        elif '^' in row:
+            row1 = replace_char_at_index(row, i, '|')
+            
+            if (irow, row1) in memory:
+                # print("in memory!")
+                return memory[(irow, row1)]
+            new_lines[irow] = row1
+            o = next_rec(new_lines, irow+1, memory)
+            memory[(irow, row1)] = o
+            return o
+        else:
             if (i > 0 and row[i-1] == '.') and (i < len(row) - 1 and row[i+1] == '.'):
                 row1 = replace_char_at_index(row, i-1, '|')
                 row2 = replace_char_at_index(row, i+1, '|')
@@ -73,15 +78,22 @@ def next_rec(lines, irow):
                 world2 = [l for l in new_lines]
                 world1[irow] = row1
                 world2[irow] = row2
-                return next_rec(world1, irow + 1) + next_rec(world2, irow+1)
-            elif i > 0 and row[i-1] == '.':
-                row = replace_char_at_index(row, i-1, '|')
-                new_lines[irow] = row
-                return next_rec(new_lines, irow + 1)
-            elif i < len(row) - 1 and row[i+1] == '.':
-                row = replace_char_at_index(row, i+1, '|')
-                new_lines[irow] = row
-                return next_rec(new_lines, irow + 1)
+
+                if (irow, row1) in memory:
+                    # print("in memory!")
+                    o1 = memory[(irow, row1)]
+                else:
+                    o1 = next_rec(world1, irow+1, memory)
+
+                if (irow, row2) in memory:
+                    # print("in memory!")
+                    o2 = memory[(irow, row2)]
+                else:
+                    o2 = next_rec(world2, irow+1, memory)
+
+                memory[(irow, row1)] = o1
+                memory[(irow, row2)] = o2
+                return o1 + o2
 
 
 def day7(filename):
@@ -101,18 +113,13 @@ def day7(filename):
     return splits
 
 def day7pt2(filename):
-    outcome = next_rec(readfile(filename), 0)
+    outcome = next_rec(readfile(filename), 0, {})
 
-    # for w in outcome:
-    #     # prettyprint(w)
-    #     print("")
-    return len(outcome)
+    return outcome
 
 # prettyprint(readfile('day7/testinput'))
 
-# print(day7('day7/testinput'))
+print(day7('day7/testinput'))
+print(day7('day7/input'))
 print(day7pt2('day7/testinput'))
-# print(day7pt2('day7/input'))
-# print(day7('day7/input'))
-
-# prettyprint(lines)
+print(day7pt2('day7/input'))
