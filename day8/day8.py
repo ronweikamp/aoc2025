@@ -48,6 +48,26 @@ def clusters(sorted_pairs, count=10):
 
     return clusters
 
+def clusters2(sorted_pairs, max_size):
+    clusters = []
+    i = 0
+    for (p1,p2), _  in sorted_pairs:
+        # clusters that contain p1 or p2
+        existing_c = [i for i,c in enumerate(clusters) if (p1 in c) or (p2 in c)]
+        if len(existing_c) > 0:
+            clusters[existing_c[0]].add(p1)
+            clusters[existing_c[0]].add(p2)
+            if len(existing_c) > 1:
+                # merge
+                # print("merge")
+                clusters[existing_c[0]] = clusters[existing_c[0]].union(clusters.pop(existing_c[1]))
+        else:
+            clusters.append({p1,p2})
+        i += 1
+        if len(clusters) > 0 and len(clusters[0]) == max_size:
+            return (p1,p2)
+
+
 def readfile(filename):
     lines = []
     with open(filename, 'r') as file:
@@ -62,5 +82,14 @@ def day8(filename):
     print(sorted_cs)
     return reduce(lambda x, y: x * y, sorted_cs)
 
+def day8pt2(filename):
+    points = readfile(filename)
+    max_size = len(points)
+    p1,p2 = clusters2(sorted_point_pairs(points), max_size)
+    
+    return p1[0] * p2[0]
+
 print(day8('day8/testinput'))
 print(day8('day8/input'))
+print(day8pt2('day8/testinput'))
+print(day8pt2('day8/input'))
